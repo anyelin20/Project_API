@@ -11,7 +11,7 @@ pull:
 - prefect.deployments.steps.run_shell_script:
     script: |
       python -m pip install --upgrade pip --root-user-action=ignore
-      pip install -r Project_API-main/requirements.txt --root-user-action=ignore
+      pip install -r Project_API/requirements.txt --root-user-action=ignore
 
 deployments:
 - name: project-api

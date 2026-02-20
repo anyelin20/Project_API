@@ -1,39 +1,25 @@
----
-# Welcome to your prefect.yaml file! You can use this file for
-# storing and managing configuration for deploying your flows.
-# We recommend committing this file to source control along
-# with your flow code.
-
-# Generic metadata about this project
 name: Tarea_adm_datos
 prefect-version: 3.6.18
 
-# build section allows you to manage and build docker images
 build: null
-
-# push section allows you to manage if and how this project
-# is uploaded to remote locations
 push: null
 
-# pull section allows you to provide instructions for cloning
-# this project in remote locations
 pull:
 - prefect.deployments.steps.git_clone:
     repository: https://github.com/anyelin20/Project_API.git
     branch: main
 - prefect.deployments.steps.run_shell_script:
-      script: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-# the deployments section allows you to provide configuration
-# for deploying flows
+    script: |
+      python -m pip install --upgrade pip --root-user-action=ignore
+      pip install -r Project_API-main/requirements.txt --root-user-action=ignore
+
 deployments:
 - name: project-api
   version: null
   tags: []
   concurrency_limit: null
   description: null
-  entrypoint: pipeline.py:main
+  entrypoint: Project_API-main/pipeline.py:main
   parameters: {}
   work_pool:
     name: api_pool

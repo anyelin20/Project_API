@@ -7,6 +7,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from pymongo import MongoClient, UpdateOne
 
+# ✅ Prefect (para que "main" sea un Flow deployable)
+from prefect import flow
+
 # =========================
 # Config
 # =========================
@@ -32,13 +35,9 @@ ALPHA_URL = "https://www.alphavantage.co/query"
 # =========================
 def fetch_alpha_vantage(function_name: str, symbol: str) -> dict:
     if not ALPHA_KEY:
-        raise RuntimeError("Falta ALPHAVANTAGE_KEY en .env")
+        raise RuntimeError("Falta ALPHAVANTAGE_KEY (defínela como variable de entorno o en .env local).")
 
-    params = {
-        "function": function_name,
-        "symbol": symbol,
-        "apikey": ALPHA_KEY
-    }
+    params = {"function": function_name, "symbol": symbol, "apikey": ALPHA_KEY}
 
     r = requests.get(ALPHA_URL, params=params, timeout=30)
     r.raise_for_status()
@@ -84,13 +83,16 @@ def alpha_daily_to_dataframe(raw: dict) -> pd.DataFrame:
     df.rename(columns={"index": "date"}, inplace=True)
 
     # Renombrar columnas del API
-    df.rename(columns={
-        "1. open": "open",
-        "2. high": "high",
-        "3. low": "low",
-        "4. close": "close",
-        "5. volume": "volume",
-    }, inplace=True)
+    df.rename(
+        columns={
+            "1. open": "open",
+            "2. high": "high",
+            "3. low": "low",
+            "4. close": "close",
+            "5. volume": "volume",
+        },
+        inplace=True,
+    )
 
     return df
 
@@ -127,7 +129,7 @@ def basic_cleaning(df: pd.DataFrame) -> pd.DataFrame:
 # =========================
 def upsert_to_mongo(df: pd.DataFrame, symbol: str) -> int:
     if not MONGO_URI:
-        raise RuntimeError("Falta MONGO_URI en .env")
+        raise RuntimeError("Falta MONGO_URI (defínela como variable de entorno o en .env local).")
 
     client = MongoClient(MONGO_URI)
     coll = client[MONGO_DB][MONGO_COLLECTION]
@@ -153,7 +155,7 @@ def upsert_to_mongo(df: pd.DataFrame, symbol: str) -> int:
             UpdateOne(
                 {"symbol": doc["symbol"], "date": doc["date"]},
                 {"$set": doc},
-                upsert=True
+                upsert=True,
             )
         )
 
@@ -165,8 +167,9 @@ def upsert_to_mongo(df: pd.DataFrame, symbol: str) -> int:
 
 
 # =========================
-# Main pipeline
+# Main pipeline (✅ ahora es un Prefect Flow)
 # =========================
+@flow(name="Project_API_AlphaVantage_Staging_Clean_Mongo")
 def main():
     print(f"Extrayendo de Alpha Vantage: {ALPHA_FUNCTION} / {ALPHA_SYMBOL} ...")
     raw = fetch_alpha_vantage(ALPHA_FUNCTION, ALPHA_SYMBOL)
@@ -187,6 +190,7 @@ def main():
 
     print(f"OK ✅ Registros escritos/actualizados: {written}")
     print("Listo.")
+    return {"records_written_or_updated": written, "symbol": ALPHA_SYMBOL, "staging_path": STAGING_PATH}
 
 
 if __name__ == "__main__":

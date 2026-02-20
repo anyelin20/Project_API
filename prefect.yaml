@@ -19,7 +19,7 @@ pull:
 
 deployments:
   - name: project-api
-    entrypoint: pipeline.py:Project_API_AlphaVantage_Staging_Clean_Mongo
+    entrypoint: pipeline.py:main
     parameters: {}
     work_pool:
       name: api_pool

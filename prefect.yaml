@@ -19,7 +19,7 @@ deployments:
   tags: []
   concurrency_limit: null
   description: null
-  entrypoint: Project_API-main/pipeline.py:main
+  entrypoint: Project_API/pipeline.py:main
   parameters: {}
   work_pool:
     name: api_pool

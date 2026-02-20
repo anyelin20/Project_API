@@ -1,3 +1,4 @@
+---
 name: Tarea_adm_datos
 prefect-version: 3.6.18
 
@@ -5,24 +6,32 @@ build: null
 push: null
 
 pull:
-- prefect.deployments.steps.git_clone:
-    repository: https://github.com/anyelin20/Project_API.git
-    branch: main
-- prefect.deployments.steps.run_shell_script:
-    script: |
-      python -m pip install --upgrade pip --root-user-action=ignore
-      pip install -r Project_API/requirements.txt --root-user-action=ignore
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/anyelin20/Project_API.git
+      branch: main
+
+  - prefect.deployments.steps.run_shell_script:
+      script: |
+        python -m pip install --upgrade pip --root-user-action=ignore
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt --root-user-action=ignore
+        elif [ -f Project_API-main/requirements.txt ]; then
+          pip install -r Project_API-main/requirements.txt --root-user-action=ignore
+        else
+          echo "requirements.txt not found. Listing files:"
+          ls -la
+        fi
 
 deployments:
-- name: project-api
-  version: null
-  tags: []
-  concurrency_limit: null
-  description: null
-  entrypoint: Project_API/pipeline.py:main
-  parameters: {}
-  work_pool:
-    name: api_pool
-    work_queue_name: null
-    job_variables: {}
-  schedules: []
+  - name: project-api
+    version: null
+    tags: []
+    concurrency_limit: null
+    description: null
+    entrypoint: pipeline.py:main
+    parameters: {}
+    work_pool:
+      name: api_pool
+      work_queue_name: null
+      job_variables: {}
+    schedules: []
